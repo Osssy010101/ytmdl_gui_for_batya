@@ -2,16 +2,30 @@ import tkinter as tk
 import subprocess
 import re
 
+# TODO:
+# У меня есть идеия, что бы создать кнопку при нажатии на которую будет запускать проводник на месте где мзуыкла скачалась.
+# Точнее просто открыть папку Музыка в проводнике.
+
+# TODO:
+# Нужно сделать что-то вроде анимации, или .. крч показывать процесс загрузки, что что-то происходит
+
+# TODO:
+# После успешной загрузки тексn "Download Complete" нужно убрать.
+
+# TODO:
+# После каждого ввода очищать поле ввода (ну убирать ссылку)
+
 BIG_TEXT_FONT_SIZE = 24
 MEDIUM_TEXT_FONT_SIZE = 18
 
-# Examples of regex:
-# https://www.youtube.com/watch?v=P-jXyi9bxEk
-# http://www.youtube.com/watch?v=P-jXyi9bxEk
-# https://www.youtube.com/watch?v=00xprBmokcI&list=PLHWoCotuxs61cuC0OQShmUoR0mP_8YXFx
-# 
-# It gets even youtube playlist links
-YOUTUBE_URL_REGEX = r"http[s]{0,1}:\/\/www.youtube.com\/watch\?v=(.*)"
+# This link cover all youtube links: vidoes and playlists. It needs for general validation of youtube URL.
+GENERAL_YOUTUBE_URL_REGEX = r"http[s]{0,1}:\/\/www.youtube.com\/watch\?v=(.*)"
+
+# You get from this link its ID (where `?v=<ID>` thing)
+YOUTUBE_URL_VIDEO_LINK_REGEX = r"http[s]{0,1}:\/\/www\.youtube\.com\/watch\?v=(.{11})"
+
+# You get youtube playlist ID (where `&list=<ID>` thing)
+YOUTUBE_URL_PLAYLIST_LINK_REGEX = r"http[s]{0,1}:\/\/www\.youtube\.com\/watch\?v=.{11}&list=(.{34})"
 
 root = tk.Tk()
 root.title("ytmdl GUI")
@@ -22,21 +36,37 @@ root.maxsize(600, 200)
 
 url: str = ""
 
-def get_url_link_from_entry():
+def download_music():
     url = entry.get()
 
-    if not re.match(YOUTUBE_URL_REGEX, url):
+    # General youtube url validaion to exclude any other text and shit.
+    if not re.match(GENERAL_YOUTUBE_URL_REGEX, url):
         error_lable = tk.Label(text="Invalid URL", font=("Arial", MEDIUM_TEXT_FONT_SIZE))
         error_lable.pack()
         error_lable.after(2000, error_lable.destroy)
         return
 
-    start_ytmdl = subprocess.run(["ytmdl", "--url", url, "--skip-meta"], shell=True)
+    # It is important to check for playlist link first, or otherwise it will not work.
+    if re.match(YOUTUBE_URL_PLAYLIST_LINK_REGEX, url):
+        youtube_playlist_id = re.match(YOUTUBE_URL_PLAYLIST_LINK_REGEX, url).group(1)
 
-    if start_ytmdl.returncode == 0:
-        tk.Label(text="Download Complete", font=("Arial", MEDIUM_TEXT_FONT_SIZE)).pack()
+        start_ytmdl = subprocess.run(["ytmdl", f"https://www.youtube.com/playlist?list={youtube_playlist_id}", "--skip-meta"], shell=True)
+        if start_ytmdl.returncode == 0:
+            tk.Label(text="Download Complete", font=("Arial", MEDIUM_TEXT_FONT_SIZE)).pack()
+        else:
+            tk.Label(text="Download Failed", font=("Arial", MEDIUM_TEXT_FONT_SIZE)).pack()
+    elif re.match(YOUTUBE_URL_VIDEO_LINK_REGEX, url):
+        start_ytmdl = subprocess.run(["ytmdl", "--url", url, "--skip-meta"], shell=True)
+
+        if start_ytmdl.returncode == 0:
+            tk.Label(text="Download Complete", font=("Arial", MEDIUM_TEXT_FONT_SIZE)).pack()
+        else:
+            tk.Label(text="Download Failed", font=("Arial", MEDIUM_TEXT_FONT_SIZE)).pack()
     else:
-        tk.Label(text="Download Failed", font=("Arial", MEDIUM_TEXT_FONT_SIZE)).pack()
+        error_lable = tk.Label(text="Invalid URL", font=("Arial", MEDIUM_TEXT_FONT_SIZE))
+        error_lable.pack()
+        error_lable.after(2000, error_lable.destroy)
+        return
 
 tk.Label(text="Download Youtube Music", font=("Arial", BIG_TEXT_FONT_SIZE)).pack()
 
@@ -44,7 +74,7 @@ entry = tk.Entry(root, textvariable="Here", width=50, font=("Arial", 14))
 entry.config(highlightthickness=1.5, highlightbackground="black", highlightcolor="blue")
 entry.pack(pady=10)
 
-download_button = tk.Button(root, text="Download", font=("Arial", 16), command=get_url_link_from_entry)
+download_button = tk.Button(root, text="Download", font=("Arial", 16), command=download_music)
 download_button.pack(side="bottom", pady=10)
 
 root.mainloop()
