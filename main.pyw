@@ -18,14 +18,16 @@ import re
 BIG_TEXT_FONT_SIZE = 24
 MEDIUM_TEXT_FONT_SIZE = 18
 
-# This link cover all youtube links: vidoes and playlists. It needs for general validation of youtube URL.
-GENERAL_YOUTUBE_URL_REGEX = r"http[s]{0,1}:\/\/www.youtube.com\/watch\?v=(.*)"
+YOUTUBE_URL_REGEX = {
+    # This link cover all youtube links: vidoes and playlists. It needs for general validation of youtube URL.
+    "general": r"http[s]{0,1}:\/\/www\.youtube\.com\/watch\?v=(.*)",
 
-# You get from this link its ID (where `?v=<ID>` thing)
-YOUTUBE_URL_VIDEO_LINK_REGEX = r"http[s]{0,1}:\/\/www\.youtube\.com\/watch\?v=(.{11})"
+    # You get from this link its ID (where `?v=<ID>` thing)
+    "video": r"http[s]{0,1}:\/\/www\.youtube\.com\/watch\?v=(.{11})",
 
-# You get youtube playlist ID (where `&list=<ID>` thing)
-YOUTUBE_URL_PLAYLIST_LINK_REGEX = r"http[s]{0,1}:\/\/www\.youtube\.com\/watch\?v=.{11}&list=(.{34})"
+    # You get youtube playlist ID (where `&list=<ID>` thing)
+    "playlist": r"http[s]{0,1}:\/\/www\.youtube\.com\/watch\?v=.{11}&list=(.{34})"
+}
 
 root = tk.Tk()
 root.title("ytmdl GUI")
@@ -40,22 +42,22 @@ def download_music():
     url = entry.get()
 
     # General youtube url validaion to exclude any other text and shit.
-    if not re.match(GENERAL_YOUTUBE_URL_REGEX, url):
+    if not re.match(YOUTUBE_URL_REGEX["general"], url):
         error_lable = tk.Label(text="Invalid URL", font=("Arial", MEDIUM_TEXT_FONT_SIZE))
         error_lable.pack()
         error_lable.after(2000, error_lable.destroy)
         return
 
     # It is important to check for playlist link first, or otherwise it will not work.
-    if re.match(YOUTUBE_URL_PLAYLIST_LINK_REGEX, url):
-        youtube_playlist_id = re.match(YOUTUBE_URL_PLAYLIST_LINK_REGEX, url).group(1)
+    if re.match(YOUTUBE_URL_REGEX["playlist"], url):
+        youtube_playlist_id = re.match(YOUTUBE_URL_REGEX["playlist"], url).group(1)
 
         start_ytmdl = subprocess.run(["ytmdl", f"https://www.youtube.com/playlist?list={youtube_playlist_id}", "--skip-meta"], shell=True)
         if start_ytmdl.returncode == 0:
             tk.Label(text="Download Complete", font=("Arial", MEDIUM_TEXT_FONT_SIZE)).pack()
         else:
             tk.Label(text="Download Failed", font=("Arial", MEDIUM_TEXT_FONT_SIZE)).pack()
-    elif re.match(YOUTUBE_URL_VIDEO_LINK_REGEX, url):
+    elif re.match(YOUTUBE_URL_REGEX["video"], url):
         start_ytmdl = subprocess.run(["ytmdl", "--url", url, "--skip-meta"], shell=True)
 
         if start_ytmdl.returncode == 0:
