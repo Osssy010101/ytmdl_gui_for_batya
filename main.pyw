@@ -37,9 +37,9 @@ for i in range(count_of_frames):
     obj = tk.PhotoImage(file = GIF_PATH, format = f"gif -index {i}")
     photoimage_objects.append(obj)
 
-root.geometry('600x200')
-root.minsize(600, 200)
-root.maxsize(600, 200)
+root.geometry('600x500')
+root.minsize(600, 500)
+root.maxsize(600, 500)
 
 url: str = ""
 

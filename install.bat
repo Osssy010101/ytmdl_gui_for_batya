@@ -1,1 +1,1 @@
-pip install ytmdl
+pip install ytmdl pillow
