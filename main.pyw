@@ -1,10 +1,8 @@
 import tkinter as tk
 import subprocess
 import re
-
-# TODO:
-# У меня есть идеия, что бы создать кнопку при нажатии на которую будет запускать проводник на месте где мзуыкла скачалась.
-# Точнее просто открыть папку Музыка в проводнике.
+import os
+import platform
 
 # TODO:
 # Нужно сделать что-то вроде анимации, или .. крч показывать процесс загрузки, что что-то происходит
@@ -29,6 +27,8 @@ YOUTUBE_URL_REGEX = {
     "playlist": r"http[s]{0,1}:\/\/www\.youtube\.com\/watch\?v=.{11}&list=(.{34})"
 }
 
+os_system_name = platform.system()
+
 root = tk.Tk()
 root.title("ytmdl GUI")
 
@@ -37,6 +37,14 @@ root.minsize(600, 200)
 root.maxsize(600, 200)
 
 url: str = ""
+
+def open_music_dir():
+    # TODO:
+    # Нужно еще сделать тоже самое для Linux, причем нужно взять из $PATH место где скачиваеться музыка из ytmdl
+    # Пока сделаю так что бы эта фича была только для Windows.
+    if os_system_name == "Windows":
+        user_system_name = os.getlogin()
+        os.system(f"explorer.exe C:\\Users\\{user_system_name}\\Music")
 
 def download_music():
     url = entry.get()
@@ -77,6 +85,9 @@ entry.config(highlightthickness=1.5, highlightbackground="black", highlightcolor
 entry.pack(pady=10)
 
 download_button = tk.Button(root, text="Download", font=("Arial", 16), command=download_music)
-download_button.pack(side="bottom", pady=10)
+download_button.pack(pady=10)
+
+open_dir_button = tk.Button(root, text="Open Music Directory", font=("Arial", 16), command=open_music_dir)
+open_dir_button.pack(side="bottom", anchor="e", padx=8, pady=8)
 
 root.mainloop()
